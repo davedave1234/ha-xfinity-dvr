@@ -26,14 +26,25 @@ class XfinityDVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             url = "https://accrem.apps.cloud.comcast.net/api/v1/pairing/start"
             payload = {"partner": "comcast", "clientDeviceId": self._uuid}
+            headers = {
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
             
             try:
                 # Use executor to avoid blocking HA's async event loop
                 response = await self.hass.async_add_executor_job(
-                    lambda: requests.post(url, json=payload, timeout=10).json()
+                    lambda: requests.post(url, json=payload, headers=headers, timeout=10)
                 )
-                self._temp_auth_token = response.get("authorizationToken")
-                self._pairing_code = response.get("pairingCode")
+                
+                # Log the raw response so we can see exactly what Comcast sent back if it fails
+                _LOGGER.debug(f"Comcast API Response: {response.status_code} - {response.text}")
+                
+                data = response.json()
+                self._temp_auth_token = data.get("authorizationToken")
+                
+                # FORCE the pairing code to be a string to prevent UI crashes
+                self._pairing_code = str(data.get("pairingCode"))
                 
                 # Move to the progress step to wait for user input on the TV
                 return await self.async_step_pairing_wait()
@@ -82,7 +93,13 @@ class XfinityDVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Background task that pings the Comcast API until confirmed."""
         url = "https://accrem.apps.cloud.comcast.net/api/v1/pairing/confirm"
         payload = {"partner": "comcast", "clientDeviceId": self._uuid}
-        headers = {"X-Authorization": self._temp_auth_token}
+        
+        # We also pass the User-Agent header here to stay consistent and avoid blocks
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "X-Authorization": self._temp_auth_token
+        }
 
         # Poll every 5 seconds for roughly 2 minutes (24 attempts)
         for _ in range(24):  
@@ -110,3 +127,4 @@ class XfinityDVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
         )
         return False
+        
