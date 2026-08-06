@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Xfinity DVR",
+        "description": "Click submit to generate an Easy Pair code."
+      }
+    },
+    "progress": {
+      "wait_for_pairing": "Please enter this code in the Easy Pair app on your X1 box: **{pairing_code}**\n\nWaiting for confirmation..."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Comcast servers.",
+      "pairing_failed": "Pairing timed out or failed. Please try again."
+    }
+  }
+}
