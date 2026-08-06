@@ -1,0 +1,12 @@
+{
+  "domain": "xfinity_dvr",
+  "name": "Xfinity X1 DVR",
+  "codeowners": ["@davedave1234"],
+  "config_flow": true,
+  "dependencies": [],
+  "iot_class": "cloud_push",
+  "version": "1.0.0",
+  "requirements": ["requests"],
+  "issue_tracker": "https://github.com/yourusername/ha-xfinity-dvr/issues",
+  "documentation": "https://github.com/yourusername/ha-xfinity-dvr"
+}
